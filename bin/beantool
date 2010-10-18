@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'beanstalk-client'
+
+class BeanTool
+  NAME = 'BeanTool'
+  VERSION = '0.1'
+
+  def self.version 
+    [NAME, VERSION].join(' ') 
+  end
+
+  def initialize(addrs)
+    @pool = Beanstalk::Pool.new(addrs) 
+  end
+
+  def list_tubes
+    a = Array.new
+    a << 'List Tubes'
+    @pool.list_tubes.each do |host, tubes|
+      a << host
+      tubes.each do |tube|
+        a << "\t" + tube
+      end
+    end
+    return a.join("\n")
+  end
+
+  def raw_stats
+    a = Array.new
+    a << 'Raw Stats'
+    a << '-'*(a.last.size)
+    raw_stats = @pool.raw_stats
+    raw_stats.each do |host, stats|
+      a << host
+      build_stats(stats).each { |s| a << "\t" + s } 
+    end
+    return a.join("\n")
+  end
+
+  def stats
+    a = Array.new
+    a << 'Stats'
+    a << '-'*(a.last.size)
+    a << build_stats(@pool.stats)
+    return a.flatten.join("\n")
+  end
+
+  def tube_stats(tube)
+    a = Array.new
+    a << tube + ' Tube Stats'
+    a << '-'*(a.last.size)
+    a << build_stats(@pool.stats_tube(tube))
+    return a.flatten.join("\n")
+  end
+
+  def tube_stats_raw(tube)
+    a = Array.new
+    a << tube + ' Raw Tube Stats'
+    a << '-'*(a.last.size)
+    raw_stats = @pool.raw_stats_tube(tube)
+    raw_stats.each do |host, stats|
+      a << host
+      build_stats(stats).each { |s| a << "\t" + s }
+    end
+    return a.join("\n")
+  end
+  
+  def version
+    BeanTool.version
+  end
+
+  private
+
+  def build_stats(stats)
+    a = Array.new
+    stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
+    return a
+  end
+end
+
+options = Hash.new
+beanfile = File.join(ENV['HOME'], '.beantool')
+options[:addrs] = File.exist?(beanfile) ? IO.readlines(beanfile) : Array.new
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: beantool [options]"
+
+  opts.on("-a", "--address [ADDRESS]", "Beanstalkd address") do |addr|
+    options[:addrs] ||= Array.new
+    options[:addrs] << addr
+  end
+  opts.on("-l", "--list-tubes", "List tubes") { |o| options[:list] = true }
+  opts.on("-r", "--raw-stats", "Raw stats") { |o| options[:raw_stats] = true }
+  opts.on("-s", "--stats", "Stats") { |o| options[:stats] = true }
+  opts.on("-t", "--tube-stats [tube]", "Tube stats") { |o| options[:tube_stats] = o }
+  opts.on("-w", "--tube-stats-raw [tube]", "Raw tube stats") { |o| options[:tube_stats_raw] = o }
+  opts.on("-v", "--version", "Version") { |o| options[:version] = true } 
+end.parse!
+
+beantool = BeanTool.new(options[:addrs])
+if options[:list]
+  puts beantool.list_tubes
+end
+
+if options[:stats]
+  puts beantool.stats
+end
+
+if options[:raw_stats]
+  puts beantool.raw_stats
+end
+if options[:version]
+  puts beantool.version
+end
+if options[:tube_stats]
+  puts beantool.tube_stats(options[:tube_stats])
+end
+if options[:tube_stats_raw]
+  puts beantool.tube_stats_raw(options[:tube_stats_raw])
+end
