@@ -16,6 +16,7 @@ OptionParser.new do |opts|
   end
   opts.on("-e", "--export [TUBE]", "Export tube") { |tube| options[:export] = tube }
   opts.on("-f", "--filename [FILENAME]", "Filename for import/export") { |file| options[:filename] = file }
+  opts.on("-i", "--import [TUBE]", "Import tube") { |tube| options[:import] = tube }
   opts.on("-l", "--list-tubes", "List tubes") { |o| options[:list] = true }
   opts.on("-p", "--peek [TUBE]", "Peek tube") { |o| options[:peek] = o }
   opts.on("-P", "--purge [TUBE]", "Purge tube") { |o| options[:purge] = o }
@@ -29,6 +30,9 @@ end.parse!
 beantool = Beantool.new(options[:addrs])
 if options[:export]
   beantool.export(options[:export], options[:filename] || options[:export]+'.yaml')
+end
+if options[:import]
+  beantool.import(options[:import], options[:filename] || options[:import]+'.yaml')
 end
 if options[:peek]
   puts beantool.peek(options[:peek])

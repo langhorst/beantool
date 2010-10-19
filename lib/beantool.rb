@@ -13,6 +13,12 @@ class Beantool
     @pool = Beanstalk::Pool.new(addrs) 
   end
 
+  def import(tube, file)
+    jobs = YAML.load_file(file)
+    @pool.use(tube)
+    jobs.each { |job| @pool.put(job) }
+  end
+
   def export(tube, file)
     jobs = Array.new
     @pool.watch(tube)
