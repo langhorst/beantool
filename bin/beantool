@@ -14,17 +14,22 @@ OptionParser.new do |opts|
     options[:addrs] ||= Array.new
     options[:addrs] << addr
   end
-  opts.on("-p", "--peek [tube]", "Peek tube") { |o| options[:peek] = o }
+  opts.on("-e", "--export [TUBE]", "Export tube") { |tube| options[:export] = tube }
+  opts.on("-f", "--filename [FILENAME]", "Filename for import/export") { |file| options[:filename] = file }
   opts.on("-l", "--list-tubes", "List tubes") { |o| options[:list] = true }
-  opts.on("-P", "--purge [tube]", "Purge tube") { |o| options[:purge] = o }
-  opts.on("-S", "--raw-stats", "Raw stats") { |o| options[:raw_stats] = true }
+  opts.on("-p", "--peek [TUBE]", "Peek tube") { |o| options[:peek] = o }
+  opts.on("-P", "--purge [TUBE]", "Purge tube") { |o| options[:purge] = o }
   opts.on("-s", "--stats", "Stats") { |o| options[:stats] = true }
-  opts.on("-t", "--tube-stats [tube]", "Tube stats") { |o| options[:tube_stats] = o }
-  opts.on("-T", "--tube-stats-raw [tube]", "Raw tube stats") { |o| options[:tube_stats_raw] = o }
+  opts.on("-S", "--raw-stats", "Raw stats") { |o| options[:raw_stats] = true }
+  opts.on("-t", "--tube-stats [TUBE]", "Tube stats") { |o| options[:tube_stats] = o }
+  opts.on("-T", "--raw-tube-stats [TUBE]", "Raw tube stats") { |o| options[:tube_stats_raw] = o }
   opts.on("-v", "--version", "Version") { |o| options[:version] = true } 
 end.parse!
 
-beantool = BeanTool.new(options[:addrs])
+beantool = Beantool.new(options[:addrs])
+if options[:export]
+  beantool.export(options[:export], options[:filename] || options[:export]+'.yaml')
+end
 if options[:peek]
   puts beantool.peek(options[:peek])
 end

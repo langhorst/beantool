@@ -13,6 +13,19 @@ class Beantool
     @pool = Beanstalk::Pool.new(addrs) 
   end
 
+  def export(tube, file)
+    jobs = Array.new
+    @pool.watch(tube)
+    job = @pool.peek_ready
+    # todo: do we need to do delayed and buried jobs as well?
+    while !job.nil?
+      jobs << job
+      @pool.reserve.delete
+      job = @pool.peek_ready
+    end
+    File.open(file, 'a') { |f| YAML.dump(jobs, f) }
+  end
+
   def list_tubes
     a = build_header('Tubes')
     @pool.list_tubes.each do |host, tubes|
