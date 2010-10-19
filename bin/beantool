@@ -16,8 +16,7 @@ class BeanTool
   end
 
   def list_tubes
-    a = Array.new
-    a << 'List Tubes'
+    a = build_header('Tubes')
     @pool.list_tubes.each do |host, tubes|
       a << host
       tubes.each do |tube|
@@ -27,10 +26,29 @@ class BeanTool
     return a.join("\n")
   end
 
+  def peek(tube)
+    a = build_header("#{tube} Peek")
+    @pool.use(tube)
+    job = { :id => 123, :body => 'test message' }
+    @pool.put(job)
+    @pool.watch(tube)
+    a << @pool.peek_ready.to_s
+    return a.join("\n")
+  end
+
+  def purge(tube)
+    a = build_header("#{tube} Purge")
+    @pool.watch(tube)
+    while !@pool.peek_ready.nil?
+      job = @pool.reserve
+      a << job.to_s
+      job.delete
+    end
+    return a.join("\n")
+  end
+
   def raw_stats
-    a = Array.new
-    a << 'Raw Stats'
-    a << '-'*(a.last.size)
+    a = build_header('Raw Stats')
     raw_stats = @pool.raw_stats
     raw_stats.each do |host, stats|
       a << host
@@ -40,25 +58,19 @@ class BeanTool
   end
 
   def stats
-    a = Array.new
-    a << 'Stats'
-    a << '-'*(a.last.size)
+    a = build_header('Stats')
     a << build_stats(@pool.stats)
     return a.flatten.join("\n")
   end
 
   def tube_stats(tube)
-    a = Array.new
-    a << tube + ' Tube Stats'
-    a << '-'*(a.last.size)
+    a = build_header("#{tube} Tube Stats")
     a << build_stats(@pool.stats_tube(tube))
     return a.flatten.join("\n")
   end
 
   def tube_stats_raw(tube)
-    a = Array.new
-    a << tube + ' Raw Tube Stats'
-    a << '-'*(a.last.size)
+    a = build_header("#{tube} Raw Tube Stats")
     raw_stats = @pool.raw_stats_tube(tube)
     raw_stats.each do |host, stats|
       a << host
@@ -72,6 +84,13 @@ class BeanTool
   end
 
   private
+
+  def build_header(title)
+    a = Array.new
+    a << title
+    a << '-'*title.size
+    return a
+  end
 
   def build_stats(stats)
     a = Array.new
@@ -91,23 +110,29 @@ OptionParser.new do |opts|
     options[:addrs] ||= Array.new
     options[:addrs] << addr
   end
+  opts.on("-p", "--peek [tube]", "Peek tube") { |o| options[:peek] = o }
   opts.on("-l", "--list-tubes", "List tubes") { |o| options[:list] = true }
-  opts.on("-r", "--raw-stats", "Raw stats") { |o| options[:raw_stats] = true }
+  opts.on("-P", "--purge [tube]", "Purge tube") { |o| options[:purge] = o }
+  opts.on("-S", "--raw-stats", "Raw stats") { |o| options[:raw_stats] = true }
   opts.on("-s", "--stats", "Stats") { |o| options[:stats] = true }
   opts.on("-t", "--tube-stats [tube]", "Tube stats") { |o| options[:tube_stats] = o }
-  opts.on("-w", "--tube-stats-raw [tube]", "Raw tube stats") { |o| options[:tube_stats_raw] = o }
+  opts.on("-T", "--tube-stats-raw [tube]", "Raw tube stats") { |o| options[:tube_stats_raw] = o }
   opts.on("-v", "--version", "Version") { |o| options[:version] = true } 
 end.parse!
 
 beantool = BeanTool.new(options[:addrs])
+if options[:peek]
+  puts beantool.peek(options[:peek])
+end
 if options[:list]
   puts beantool.list_tubes
 end
-
+if options[:purge]
+  puts beantool.purge(options[:purge])
+end
 if options[:stats]
   puts beantool.stats
 end
-
 if options[:raw_stats]
   puts beantool.raw_stats
 end
@@ -120,3 +145,4 @@ end
 if options[:tube_stats_raw]
   puts beantool.tube_stats_raw(options[:tube_stats_raw])
 end
+
