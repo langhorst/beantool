@@ -62,13 +62,6 @@ class Beantool
    
     private
 
-    def build_header(title)
-      a = []
-      a << title
-      a << '-'*title.size
-      return a
-    end
-
     def build_stats(stats)
       a = []
       stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
