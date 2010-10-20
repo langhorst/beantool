@@ -4,22 +4,20 @@ require 'beanstalk-client'
 require 'beantool/administering'
 require 'beantool/monitoring'
 
-module Beantool
-  class Beantool
-    NAME = 'beantool'
-    VERSION = '0.1'
+class Beantool
+  NAME = 'beantool'
+  VERSION = '0.2'
 
-    include Administering
-    include Monitoring
+  include Beantool::Administering
+  include Beantool::Monitoring
 
-    def self.version 
-      [NAME, VERSION].join(' ') 
-    end
+  def self.version 
+    [NAME, VERSION].join(' ') 
+  end
 
-    def initialize(addrs)
-      @pool = Beanstalk::Pool.new(addrs) 
-      #@pool.ignore('default')
-    end
+  def initialize(addrs)
+    @pool = Beanstalk::Pool.new(addrs) 
+    #@pool.ignore('default')
   end
 end
 

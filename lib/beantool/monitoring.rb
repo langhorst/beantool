@@ -1,4 +1,4 @@
-module Beantool
+class Beantool
   module Monitoring
     def list_tubes
       a = build_header('Tubes')

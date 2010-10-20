@@ -1,4 +1,4 @@
-module Beantool
+class Beantool
   module Administering
     def import(tube, file)
       jobs = YAML.load_file(file)

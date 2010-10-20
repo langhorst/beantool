@@ -2,7 +2,6 @@
 
 require 'optparse'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
-include Beantool
 
 options = Hash.new
 beanfile = File.join(ENV['HOME'], '.beantool')
@@ -34,7 +33,7 @@ OptionParser.new do |opts|
   end
 
   opts.on_tail("-v", "--version", "Show version") do
-    puts Beantool::Beantool.version
+    puts Beantool.version
     exit
   end
   
@@ -109,7 +108,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-beantool = Beantool::Beantool.new(options[:hosts])
+beantool = Beantool.new(options[:hosts])
 if options[:stats]
   if options[:stats].empty?
     puts beantool.stats
