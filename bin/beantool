@@ -2,6 +2,7 @@
 
 require 'optparse'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
+include Beantool
 
 options = Hash.new
 beanfile = File.join(ENV['HOME'], '.beantool')
@@ -17,14 +18,26 @@ OptionParser.new do |opts|
           "Beanstalkd address",
           "    Specify multiple addresses with",
           "    additional arguments. Permanently",
-          "    set-up this argument by creating a",
+          "    set this argument by creating a",
           "    '.beantool' file in your home",
-          "    directory, each line representing a",
-          "    Beanstalkd address.") do |host|
+          "    directory, each line representing",
+          "    a Beanstalkd address.") do |host|
     options[:hosts] ||= Array.new
     options[:hosts] << host
   end
 
+  opts.on_tail.separator("")
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  opts.on_tail("-v", "--version", "Show version") do
+    puts Beantool::Beantool.version
+    exit
+  end
+  
   opts.separator("")
   opts.separator("Monitoring Options")
 
@@ -38,7 +51,7 @@ OptionParser.new do |opts|
     options[:stats] = tubes
   end
 
-  opts.on("-S", "--raw-stats [TUBE]",
+  opts.on("-r", "--raw-stats [TUBE]",
           "Display raw stats for entire instance",
           "    Optionally provide a comma separated",
           "    list of tubes for raw tube stats.") do |tubes|
@@ -46,49 +59,57 @@ OptionParser.new do |opts|
     options[:raw_stats] = tubes
   end
 
-  opts.on("-r", "--peek-ready [TUBE]",
-          "Peek a ready message") { |tube| options[:peek_ready] = tube }
+  opts.on("-p", "--peek-ready [TUBE]",
+          "Peek a ready job") { |tube| options[:peek_ready] = tube }
 
   opts.on("-b", "--peek-buried [TUBE]",
-          "Peek a buried message") { |tube| options[:peek_buried] = tube }
+          "Peek a buried job") { |tube| options[:peek_buried] = tube }
 
   opts.on("-d", "--peek-delayed [TUBE]",
-          "Peek a delayed message") { |tube| options[:peek_delayed] = tube }
+          "Peek a delayed job") { |tube| options[:peek_delayed] = tube }
 
   opts.separator("")
   opts.separator("Administering Options")
 
-
-  opts.on("e", "--export [TUBE]",
-          "Export tube") do |tube|
+  opts.on("-e", "--export [TUBE]",
+          "Export tube to '--filename'",
+          "    A default filename of '[tube].yaml'",
+          "    is used if an '-f' argument is not",
+          "    provided.") do |tube|
     options[:export] = tube
   end
 
-  opts.on("i", "--import [TUBE]",
-          "Import tube") do |tube|
+  opts.on("-i", "--import [TUBE]",
+          "Import tube from '--filename',",
+          "    A default filename of '[tube].yaml'",
+          "    is used if an '-f' argument is not",
+          "    provided.") do |tube|
     options[:import] = tube
+  end
+
+  opts.on("-m", "--move-from [TUBE]",
+          "Move jobs from tube",
+          "    Use in conjunction with '-t',",
+          "    '--move-to'") do |tube|
+    options[:move] = tube
+  end
+
+  opts.on("-t", "--move-to [TUBE]",
+          "Move jobs to tube",
+          "    Use in conjunction with '-m',",
+          "    '--move-from'. You can also specify",
+          "    this argument in conjunction with '-e',",
+          "    '--export', as a means of backup.") do |tube|
+    options[:to] = tube
   end
 
   opts.on("-f", "--filename [FILENAME]", 
           "Filename for import/export") do |file|
     options[:filename] = file
   end
-
-  opts.on("-p", "--peek [TUBE]", "Peek tube") { |o| options[:peek] = o }
-  opts.on("-P", "--purge [TUBE]", "Purge tube") { |o| options[:purge] = o }
-
-  opts.on_tail("-h", "--help", "Show this message") do
-    puts opts
-    exit
-  end
-
-  opts.on_tail("-v", "--version", "Show version") do
-    puts Beantool.version
-    exit
-  end
 end.parse!
 
-beantool = Beantool.new(options[:hosts])
+beantool = Beantool::Beantool.new(options[:hosts])
 if options[:stats]
   if options[:stats].empty?
     puts beantool.stats
