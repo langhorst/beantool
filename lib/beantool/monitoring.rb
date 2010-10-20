@@ -14,13 +14,11 @@ class Beantool
     end
 
     def stats
-      a = build_header('Stats')
-      a << build_stats(@pool.stats)
-      return a.flatten.join("\n")
+      return build_stats(@pool.stats).join("\n")
     end
 
     def raw_stats 
-      a = build_header('Raw Stats')
+      a = []
       raw_stats = @pool.raw_stats
       raw_stats.each do |host, stats|
         a << host
@@ -30,19 +28,21 @@ class Beantool
     end
 
     def tube_stats(tube)
-      a = build_header("Tube Stats for #{tube}")
-      a << build_stats(@pool.stats_tube(tube))
-      return a.flatten.join("\n")
+      return build_stats(@pool.stats_tube(tube)).join("\n")
+    rescue => e
+      return e.message
     end
 
     def raw_tube_stats(tube)
-      a = build_header("Raw Tube Stats for #{tube}")
+      a = []
       raw_stats = @pool.raw_stats_tube(tube)
       raw_stats.each do |host, stats|
         a << host
         build_stats(stats).each { |s| a << "\t" + s }
       end
       return a.join("\n")
+    rescue => e
+      return e.message
     end
 
     def peek_ready(tube)
@@ -66,14 +66,14 @@ class Beantool
     private
 
     def build_header(title)
-      a = Array.new
+      a = []
       a << title
       a << '-'*title.size
       return a
     end
 
     def build_stats(stats)
-      a = Array.new
+      a = []
       stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
       return a
     end

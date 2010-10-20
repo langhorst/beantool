@@ -120,9 +120,9 @@ if options[:stats]
   if options[:stats].empty?
     puts beantool.stats
   else
-    options[:stats].each do |tube|
-      puts "\n"
+    options[:stats].each_with_index do |tube,index|
       puts beantool.tube_stats(tube)
+      puts "\n" unless index == options[:stats].size-1
     end
   end
 end
@@ -131,16 +131,16 @@ if options[:raw_stats]
   if options[:raw_stats].empty?
     puts beantool.raw_stats
   else
-    options[:raw_stats].each do |tube|
-      puts "\n"
+    options[:raw_stats].each_with_index do |tube,index|
       puts beantool.raw_tube_stats(tube)
+      puts "\n" unless index == options[:raw_stats].size-1
     end
   end
 end
 
-puts beantool.peek_ready(options[:peek_ready]) if options[:peek_ready]
-puts beantool.peek_buried(options[:peek_buried]) if options[:peek_buried]
-puts beantool.peek_delayed(options[:peek_delayed]) if options[:peek_delayed]
+print beantool.peek_ready(options[:peek_ready]) if options[:peek_ready]
+print beantool.peek_buried(options[:peek_buried]) if options[:peek_buried]
+print beantool.peek_delayed(options[:peek_delayed]) if options[:peek_delayed]
 
 # Handle adminstering options
 
