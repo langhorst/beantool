@@ -81,7 +81,7 @@ class Beantool
         a << PP.pp(job, '')
         a << PP.pp(job.body, '')
       end
-      return a.empty? ? '' : a.join("\n")
+      return a.join("\n")
     end
   end
 end
