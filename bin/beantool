@@ -5,29 +5,123 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
 
 options = Hash.new
 beanfile = File.join(ENV['HOME'], '.beantool')
-options[:addrs] = File.exist?(beanfile) ? IO.readlines(beanfile) : Array.new
+options[:hosts] = File.exist?(beanfile) ? IO.readlines(beanfile) : Array.new
 
 OptionParser.new do |opts|
   opts.banner = "Usage: beantool [options]"
 
-  opts.on("-a", "--address [ADDRESS]", "Beanstalkd address") do |addr|
-    options[:addrs] ||= Array.new
-    options[:addrs] << addr
+  opts.separator("")
+  opts.separator("General Options")
+
+  opts.on("-a", "--address [ADDRESS]",
+          "Beanstalkd address",
+          "    Specify multiple addresses with",
+          "    additional arguments. Permanently",
+          "    set-up this argument by creating a",
+          "    '.beantool' file in your home",
+          "    directory, each line representing a",
+          "    Beanstalkd address.") do |host|
+    options[:hosts] ||= Array.new
+    options[:hosts] << host
   end
-  opts.on("-e", "--export [TUBE]", "Export tube") { |tube| options[:export] = tube }
-  opts.on("-f", "--filename [FILENAME]", "Filename for import/export") { |file| options[:filename] = file }
-  opts.on("-i", "--import [TUBE]", "Import tube") { |tube| options[:import] = tube }
-  opts.on("-l", "--list-tubes", "List tubes") { |o| options[:list] = true }
+
+  opts.separator("")
+  opts.separator("Monitoring Options")
+
+  opts.on("-l", "--list", "List all tubes") { options[:list] = true }
+
+  opts.on("-s", "--stats [TUBE]",
+          "Display stats for entire instance",
+          "    Optionally provide a comma separated",
+          "    list of tubes for tube stats.") do |tubes|
+    tubes = tubes.to_s.split(',')
+    options[:stats] = tubes
+  end
+
+  opts.on("-S", "--raw-stats [TUBE]",
+          "Display raw stats for entire instance",
+          "    Optionally provide a comma separated",
+          "    list of tubes for raw tube stats.") do |tubes|
+    tubes = tubes.to_s.split(',')
+    options[:raw_stats] = tubes
+  end
+
+  opts.on("-r", "--peek-ready [TUBE]",
+          "Peek a ready message") { |tube| options[:peek_ready] = tube }
+
+  opts.on("-b", "--peek-buried [TUBE]",
+          "Peek a buried message") { |tube| options[:peek_buried] = tube }
+
+  opts.on("-d", "--peek-delayed [TUBE]",
+          "Peek a delayed message") { |tube| options[:peek_delayed] = tube }
+
+  opts.separator("")
+  opts.separator("Administering Options")
+
+
+  opts.on("e", "--export [TUBE]",
+          "Export tube") do |tube|
+    options[:export] = tube
+  end
+
+  opts.on("i", "--import [TUBE]",
+          "Import tube") do |tube|
+    options[:import] = tube
+  end
+
+  opts.on("-f", "--filename [FILENAME]", 
+          "Filename for import/export") do |file|
+    options[:filename] = file
+  end
+
   opts.on("-p", "--peek [TUBE]", "Peek tube") { |o| options[:peek] = o }
   opts.on("-P", "--purge [TUBE]", "Purge tube") { |o| options[:purge] = o }
-  opts.on("-s", "--stats", "Stats") { |o| options[:stats] = true }
-  opts.on("-S", "--raw-stats", "Raw stats") { |o| options[:raw_stats] = true }
-  opts.on("-t", "--tube-stats [TUBE]", "Tube stats") { |o| options[:tube_stats] = o }
-  opts.on("-T", "--raw-tube-stats [TUBE]", "Raw tube stats") { |o| options[:tube_stats_raw] = o }
-  opts.on("-v", "--version", "Version") { |o| options[:version] = true } 
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  opts.on_tail("-v", "--version", "Show version") do
+    puts Beantool.version
+    exit
+  end
 end.parse!
 
-beantool = Beantool.new(options[:addrs])
+beantool = Beantool.new(options[:hosts])
+if options[:stats]
+  if options[:stats].empty?
+    puts beantool.stats
+  else
+    options[:stats].each do |tube|
+      puts beantool.stats_tube(tube)
+    end
+  end
+end
+
+if options[:raw_stats]
+  if options[:raw_stats].empty?
+    puts beantool.stats_raw
+  else
+    options[:raw_stats].each do |tube|
+      puts beantool.stats_tube_raw(tube)
+    end
+  end
+end
+
+if options[:peek_ready]
+  puts beantool.peek_ready(options[:peek_ready])
+end
+
+if options[:peek_buried]
+  puts beantool.peek_buried(options[:peek_buried])
+end
+
+if options[:peek_delayed]
+  puts beantool.peek_delayed(options[:peek_delayed])
+end
+
+
 if options[:export]
   beantool.export(options[:export], options[:filename] || options[:export]+'.yaml')
 end
@@ -42,20 +136,5 @@ if options[:list]
 end
 if options[:purge]
   puts beantool.purge(options[:purge])
-end
-if options[:stats]
-  puts beantool.stats
-end
-if options[:raw_stats]
-  puts beantool.raw_stats
-end
-if options[:version]
-  puts beantool.version
-end
-if options[:tube_stats]
-  puts beantool.tube_stats(options[:tube_stats])
-end
-if options[:tube_stats_raw]
-  puts beantool.tube_stats_raw(options[:tube_stats_raw])
 end
 

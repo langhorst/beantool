@@ -11,6 +11,7 @@ class Beantool
 
   def initialize(addrs)
     @pool = Beanstalk::Pool.new(addrs) 
+    #@pool.ignore('default')
   end
 
   def import(tube, file)
@@ -64,7 +65,7 @@ class Beantool
     return a.join("\n")
   end
 
-  def raw_stats
+  def stats_raw 
     a = build_header('Raw Stats')
     raw_stats = @pool.raw_stats
     raw_stats.each do |host, stats|
@@ -80,19 +81,40 @@ class Beantool
     return a.flatten.join("\n")
   end
 
-  def tube_stats(tube)
+  def stats_tube(tube)
     a = build_header("#{tube} Tube Stats")
     a << build_stats(@pool.stats_tube(tube))
     return a.flatten.join("\n")
   end
 
-  def tube_stats_raw(tube)
+  def stats_tube_raw(tube)
     a = build_header("#{tube} Raw Tube Stats")
     raw_stats = @pool.raw_stats_tube(tube)
     raw_stats.each do |host, stats|
       a << host
       build_stats(stats).each { |s| a << "\t" + s }
     end
+    return a.join("\n")
+  end
+
+  def peek_ready(tube)
+    a = build_header("Peek Ready on #{tube}")
+    @pool.watch(tube)
+    a << @pool.peek_ready
+    return a.join("\n")
+  end
+
+  def peek_buried(tube)
+    @pool.watch(tube)
+    a = build_header("Peek Buried on #{tube}")
+    a << @pool.peek_buried
+    return a.join("\n")
+  end
+
+  def peek_delayed(tube)
+    @pool.watch(tube)
+    a = build_header("Peek Delayed on #{tube}")
+    a << @pool.peek_delayed
     return a.join("\n")
   end
   
