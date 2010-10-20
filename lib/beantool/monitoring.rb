@@ -3,12 +3,10 @@ require 'pp'
 class Beantool
   module Monitoring
     def list_tubes
-      a = build_header('Tubes')
+      a = [] 
       @pool.list_tubes.each do |host, tubes|
         a << host
-        tubes.each do |tube|
-          a << "\t" + tube
-        end
+        tubes.each { |tube| a << "\t" + tube }
       end
       return a.join("\n")
     end
@@ -54,13 +52,12 @@ class Beantool
     def peek_buried(tube)
       @pool.watch(tube)
       job = @pool.peek_buried
-      return job.nil? ? 'NOT FOUND' : [:buried, job, [:body, job.body]]
+      return build_peek(@pool.peek_buried)
     end
 
     def peek_delayed(tube)
       @pool.watch(tube)
-      job = @pool.peek_delayed
-      return job.nil? ? 'NOT FOUND' : [:delayed, job, [:body, job.body]]
+      return build_peek(@pool.peek_delayed)
     end
    
     private
@@ -88,3 +85,4 @@ class Beantool
     end
   end
 end
+
