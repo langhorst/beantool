@@ -19,6 +19,22 @@ class Beantool
       File.open(file, 'a') { |f| YAML.dump(jobs, f) }
     end
 
+    def create(job, tube)
+      @pool.use(tube)
+      @pool.put(job)
+    end
+
+    def move(from, to)
+      @pool.watch(from)
+      @pool.use(to)
+      job = @pool.peek_ready
+      while !job.nil?
+        job = @pool.reserve
+        @pool.put(job)
+        job.delete
+      end
+    end
+
     def purge(tube)
       a = build_header("#{tube} Purge")
       @pool.watch(tube)

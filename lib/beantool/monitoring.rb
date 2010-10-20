@@ -1,3 +1,5 @@
+require 'pp'
+
 class Beantool
   module Monitoring
     def list_tubes
@@ -11,17 +13,13 @@ class Beantool
       return a.join("\n")
     end
 
-    def peek(tube)
-      a = build_header("#{tube} Peek")
-      @pool.use(tube)
-      job = { :id => 123, :body => 'test message' }
-      @pool.put(job)
-      @pool.watch(tube)
-      a << @pool.peek_ready.to_s
-      return a.join("\n")
+    def stats
+      a = build_header('Stats')
+      a << build_stats(@pool.stats)
+      return a.flatten.join("\n")
     end
 
-    def stats_raw 
+    def raw_stats 
       a = build_header('Raw Stats')
       raw_stats = @pool.raw_stats
       raw_stats.each do |host, stats|
@@ -31,20 +29,14 @@ class Beantool
       return a.join("\n")
     end
 
-    def stats
-      a = build_header('Stats')
-      a << build_stats(@pool.stats)
-      return a.flatten.join("\n")
-    end
-
-    def stats_tube(tube)
-      a = build_header("#{tube} Tube Stats")
+    def tube_stats(tube)
+      a = build_header("Tube Stats for #{tube}")
       a << build_stats(@pool.stats_tube(tube))
       return a.flatten.join("\n")
     end
 
-    def stats_tube_raw(tube)
-      a = build_header("#{tube} Raw Tube Stats")
+    def raw_tube_stats(tube)
+      a = build_header("Raw Tube Stats for #{tube}")
       raw_stats = @pool.raw_stats_tube(tube)
       raw_stats.each do |host, stats|
         a << host
@@ -54,24 +46,21 @@ class Beantool
     end
 
     def peek_ready(tube)
-      a = build_header("Peek Ready on #{tube}")
+      a = []
       @pool.watch(tube)
-      a << @pool.peek_ready
-      return a.join("\n")
+      return build_peek(@pool.peek_ready)
     end
 
     def peek_buried(tube)
       @pool.watch(tube)
-      a = build_header("Peek Buried on #{tube}")
-      a << @pool.peek_buried
-      return a.join("\n")
+      job = @pool.peek_buried
+      return job.nil? ? 'NOT FOUND' : [:buried, job, [:body, job.body]]
     end
 
     def peek_delayed(tube)
       @pool.watch(tube)
-      a = build_header("Peek Delayed on #{tube}")
-      a << @pool.peek_delayed
-      return a.join("\n")
+      job = @pool.peek_delayed
+      return job.nil? ? 'NOT FOUND' : [:delayed, job, [:body, job.body]]
     end
    
     private
@@ -87,6 +76,15 @@ class Beantool
       a = Array.new
       stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
       return a
+    end
+
+    def build_peek(job)
+      a = []
+      unless job.nil?
+        a << PP.pp(job, '')
+        a << PP.pp(job.body, '')
+      end
+      return a.empty? ? '' : a.join("\n")
     end
   end
 end

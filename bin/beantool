@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'pp'
 require 'optparse'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
 
@@ -74,87 +75,90 @@ OptionParser.new do |opts|
           "Export tube to '--filename'",
           "    A default filename of '[tube].yaml'",
           "    is used if an '-f' argument is not",
-          "    provided.") do |tube|
-    options[:export] = tube
-  end
+          "    provided.") { |tube| options[:export] = tube }
 
   opts.on("-i", "--import [TUBE]",
           "Import tube from '--filename',",
           "    A default filename of '[tube].yaml'",
           "    is used if an '-f' argument is not",
-          "    provided.") do |tube|
-    options[:import] = tube
-  end
+          "    provided.") { |tube| options[:import] = tube }
+
+  opts.on("-f", "--filename [FILENAME]", 
+          "Filename for import/export") { |file| options[:filename] = file }
+
+  opts.on("-c", "--create [JOB]",
+          "Create a job",
+          "    Use in conjunction with '--move-to',",
+          "    to create a job on a specific tube.",
+          "    The 'default' tube will be used if a",
+          "    '-t' argument is not provided.") { |job| options[:create] = job }
 
   opts.on("-m", "--move-from [TUBE]",
           "Move jobs from tube",
           "    Use in conjunction with '-t',",
-          "    '--move-to'") do |tube|
-    options[:move] = tube
-  end
+          "    '--move-to'") { |tube| options[:move_from] = tube }
 
   opts.on("-t", "--move-to [TUBE]",
           "Move jobs to tube",
           "    Use in conjunction with '-m',",
           "    '--move-from'. You can also specify",
           "    this argument in conjunction with '-e',",
-          "    '--export', as a means of backup.") do |tube|
-    options[:to] = tube
-  end
+          "    '--export', as a means of backup.") { |tube| options[:move_to] = tube }
 
-  opts.on("-f", "--filename [FILENAME]", 
-          "Filename for import/export") do |file|
-    options[:filename] = file
-  end
+  opts.on("-P", "--purge [TUBE]",
+          "Purge jobs from tube") { |tube| options[:purge] = tube }
+
 end.parse!
 
 beantool = Beantool.new(options[:hosts])
+
+# Handle monitoring options
+
+puts beantool.list_tubes if options[:list]
+
 if options[:stats]
   if options[:stats].empty?
     puts beantool.stats
   else
     options[:stats].each do |tube|
-      puts beantool.stats_tube(tube)
+      puts "\n"
+      puts beantool.tube_stats(tube)
     end
   end
 end
 
 if options[:raw_stats]
   if options[:raw_stats].empty?
-    puts beantool.stats_raw
+    puts beantool.raw_stats
   else
     options[:raw_stats].each do |tube|
-      puts beantool.stats_tube_raw(tube)
+      puts "\n"
+      puts beantool.raw_tube_stats(tube)
     end
   end
 end
 
-if options[:peek_ready]
-  puts beantool.peek_ready(options[:peek_ready])
-end
+puts beantool.peek_ready(options[:peek_ready]) if options[:peek_ready]
+puts beantool.peek_buried(options[:peek_buried]) if options[:peek_buried]
+puts beantool.peek_delayed(options[:peek_delayed]) if options[:peek_delayed]
 
-if options[:peek_buried]
-  puts beantool.peek_buried(options[:peek_buried])
-end
-
-if options[:peek_delayed]
-  puts beantool.peek_delayed(options[:peek_delayed])
-end
-
+# Handle adminstering options
 
 if options[:export]
-  beantool.export(options[:export], options[:filename] || options[:export]+'.yaml')
+  beantool.export(options[:export], options[:filename] || options[:export]+'.yaml', options[:move_to])
 end
+
 if options[:import]
   beantool.import(options[:import], options[:filename] || options[:import]+'.yaml')
 end
-if options[:peek]
-  puts beantool.peek(options[:peek])
+
+if options[:move_from] && options[:move_to]
+  beantool.move(options[:move_from], options[:move_to])
 end
-if options[:list]
-  puts beantool.list_tubes
-end
-if options[:purge]
-  puts beantool.purge(options[:purge])
+
+beantool.purge(options[:purge]) if options[:purge]
+
+if options[:create]
+  beantool.create(options[:create], options[:move_to] || 'default')
 end
 
