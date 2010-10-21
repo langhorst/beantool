@@ -108,6 +108,9 @@ OptionParser.new do |opts|
   opts.on("-P", "--purge [TUBE]",
           "Purge jobs from tube") { |tube| options[:purge] = tube }
 
+  opts.on("-k", "--kick [NUM]",
+          "Kick each connection") { |num| options[:kick] = num.to_i }
+
 end.parse!
 
 beantool = Beantool.new(options[:hosts])
@@ -162,5 +165,9 @@ end
 
 if options[:create]
   beantool.create(options[:create], options[:move_to] || 'default')
+end
+
+if options[:kick]
+  beantool.kick(options[:kick] || 1)
 end
 
