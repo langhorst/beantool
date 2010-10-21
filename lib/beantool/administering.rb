@@ -12,8 +12,8 @@ class Beantool
       @pool.use(move) unless move.nil?
       @pool.stats_tube(tube)['current-jobs-ready'].times do
         job = @pool.reserve
-        jobs << job
-        @pool.put(job) unless move.nil?
+        jobs << job.body
+        @pool.put(job.body) unless move.nil?
         job.delete
       end
       File.open(file, 'a') { |f| YAML.dump(jobs, f) }
@@ -29,7 +29,7 @@ class Beantool
       @pool.use(to)
       @pool.stats_tube(from)['current-jobs-ready'].times do
         job = @pool.reserve
-        @pool.put(job)
+        @pool.put(job.body)
         job.delete
       end
     end
