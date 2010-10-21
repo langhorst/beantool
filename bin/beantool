@@ -71,6 +71,9 @@ OptionParser.new do |opts|
   opts.separator("")
   opts.separator("Administering Options")
 
+  opts.on("-k", "--kick [NUM]",
+          "Kick each connection") { |num| options[:kick] = num.to_i }
+
   opts.on("-e", "--export [TUBE]",
           "Export tube to '--filename'",
           "    A default filename of '[tube].yaml'",
@@ -108,9 +111,6 @@ OptionParser.new do |opts|
   opts.on("-P", "--purge [TUBE]",
           "Purge jobs from tube") { |tube| options[:purge] = tube }
 
-  opts.on("-k", "--kick [NUM]",
-          "Kick each connection") { |num| options[:kick] = num.to_i }
-
 end.parse!
 
 beantool = Beantool.new(options[:hosts])
@@ -147,6 +147,10 @@ print beantool.peek_delayed(options[:peek_delayed]) if options[:peek_delayed]
 
 # Handle adminstering options
 
+if options[:kick]
+  beantool.kick(options[:kick] || 1)
+end
+
 if options[:export]
   beantool.export(options[:export], options[:filename] || options[:export]+'.yaml', options[:move_to])
 end
@@ -165,9 +169,5 @@ end
 
 if options[:create]
   beantool.create(options[:create], options[:move_to] || 'default')
-end
-
-if options[:kick]
-  beantool.kick(options[:kick] || 1)
 end
 
