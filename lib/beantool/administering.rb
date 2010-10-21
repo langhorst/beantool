@@ -6,15 +6,15 @@ class Beantool
       jobs.each { |job| @pool.put(job) }
     end
 
-    def export(tube, file)
+    def export(tube, file, move=nil)
       jobs = Array.new
       @pool.watch(tube)
-      job = @pool.peek_ready
-      # todo: do we need to do delayed and buried jobs as well?
-      while !job.nil?
+      @pool.use(move) unless move.nil?
+      @pool.stats_tube(tube)['current-jobs-ready'].times do
+        job = @pool.reserve
         jobs << job
-        @pool.reserve.delete
-        job = @pool.peek_ready
+        @pool.put(job) unless move.nil?
+        job.delete
       end
       File.open(file, 'a') { |f| YAML.dump(jobs, f) }
     end
@@ -27,8 +27,7 @@ class Beantool
     def move(from, to)
       @pool.watch(from)
       @pool.use(to)
-      job = @pool.peek_ready
-      while !job.nil?
+      @pool.stats_tube(from)['current-jobs-ready'].times do
         job = @pool.reserve
         @pool.put(job)
         job.delete
@@ -36,14 +35,10 @@ class Beantool
     end
 
     def purge(tube)
-      a = build_header("#{tube} Purge")
       @pool.watch(tube)
-      while !@pool.peek_ready.nil?
-        job = @pool.reserve
-        a << job.to_s
-        job.delete
+      @pool.stats_tube(tube)['current-jobs-ready'].times do
+        @pool.reserve.delete
       end
-      return a.join("\n")
     end
   end
 end

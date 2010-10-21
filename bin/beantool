@@ -6,7 +6,7 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
 
 options = Hash.new
 beanfile = File.join(ENV['HOME'], '.beantool')
-options[:hosts] = File.exist?(beanfile) ? IO.readlines(beanfile) : Array.new
+options[:hosts] = File.exist?(beanfile) ? IO.readlines(beanfile).map{ |l| l.chomp } : Array.new
 
 OptionParser.new do |opts|
   opts.banner = "Usage: beantool [options]"
@@ -156,7 +156,9 @@ if options[:move_from] && options[:move_to]
   beantool.move(options[:move_from], options[:move_to])
 end
 
-beantool.purge(options[:purge]) if options[:purge]
+if options[:purge]
+  beantool.purge(options[:purge])
+end
 
 if options[:create]
   beantool.create(options[:create], options[:move_to] || 'default')
