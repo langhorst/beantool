@@ -43,27 +43,30 @@ class Beantool
       return e.message
     end
 
+    def kick(num)
+      @pool.open_connections.each { |conn| conn.kick(num) }
+    end
+
     def peek_ready(tube)
-      a = []
-      @pool.watch(tube)
-      return build_peek(@pool.peek_ready)
+      @pool.use(tube)
+      return build_peek(@pool.peek_ready).join("\n")
     end
 
     def peek_buried(tube)
-      @pool.watch(tube)
-      job = @pool.peek_buried
-      return build_peek(@pool.peek_buried)
+      @pool.use(tube)
+      return build_peek(@pool.peek_buried).join("\n")
     end
 
     def peek_delayed(tube)
-      @pool.watch(tube)
-      return build_peek(@pool.peek_delayed)
+      @pool.use(tube)
+      return build_peek(@pool.peek_delayed).join("\n")
     end
    
     private
 
     def build_stats(stats)
       a = []
+      a << "name: #{stats.delete('name')}" if stats['name']
       stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
       return a
     end
@@ -74,7 +77,7 @@ class Beantool
         a << PP.pp(job, '')
         a << PP.pp(job.body, '')
       end
-      return a.join("\n")
+      return a
     end
   end
 end
