@@ -59,6 +59,9 @@ OptionParser.new do |opts|
     options[:raw_stats] = tubes
   end
 
+  opts.on("-i", "--inspect-job [ID]",
+          "Inspect job") { |id| options[:inspect_job] = id }
+
   opts.on("-p", "--peek-ready [TUBE]",
           "Peek a ready job") { |tube| options[:peek_ready] = tube }
 
@@ -74,13 +77,13 @@ OptionParser.new do |opts|
   opts.on("-k", "--kick [NUM]",
           "Kick each connection") { |num| options[:kick] = num.to_i }
 
-  opts.on("-e", "--export [TUBE]",
+  opts.on("-E", "--export [TUBE]",
           "Export tube to '--filename'",
           "    A default filename of '[tube].yaml'",
           "    is used if an '-f' argument is not",
           "    provided.") { |tube| options[:export] = tube }
 
-  opts.on("-i", "--import [TUBE]",
+  opts.on("-I", "--import [TUBE]",
           "Import tube from '--filename',",
           "    A default filename of '[tube].yaml'",
           "    is used if an '-f' argument is not",
@@ -140,6 +143,8 @@ if options[:raw_stats]
     end
   end
 end
+
+print beantool.inspect_job(options[:inspect_job]) if options[:inspect_job]
 
 print beantool.peek_ready(options[:peek_ready]) if options[:peek_ready]
 print beantool.peek_buried(options[:peek_buried]) if options[:peek_buried]
