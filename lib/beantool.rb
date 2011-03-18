@@ -6,7 +6,7 @@ require 'beantool/monitoring'
 
 class Beantool
   NAME = 'beantool'
-  VERSION = '0.2.1'
+  VERSION = '0.3.0'
 
   include Beantool::Administering
   include Beantool::Monitoring
