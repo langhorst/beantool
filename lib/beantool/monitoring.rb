@@ -47,6 +47,15 @@ class Beantool
       @pool.open_connections.each { |conn| conn.kick(num) }
     end
 
+    def inspect_job(id)
+      job = @pool.peek_job(id).first
+      unless job.nil?
+        return build_inspect(job.last).join("\n")
+      else
+        return "job id #{id} not found\n"
+      end
+    end
+
     def peek_ready(tube)
       @pool.use(tube)
       return build_peek(@pool.peek_ready).join("\n")
@@ -61,13 +70,22 @@ class Beantool
       @pool.use(tube)
       return build_peek(@pool.peek_delayed).join("\n")
     end
-   
+
     private
 
     def build_stats(stats)
       a = []
       a << "name: #{stats.delete('name')}" if stats['name']
       stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
+      return a
+    end
+
+    def build_inspect(job)
+      a = []
+      a << PP.pp(job, '')
+      a << "id: #{job.id}"
+      a << "body: #{job.body.inspect}\n"
+      a << PP.pp(job.stats, '')
       return a
     end
 
