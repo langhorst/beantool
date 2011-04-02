@@ -34,10 +34,13 @@ class Beantool
       end
     end
 
-    def purge(tube)
-      @pool.watch(tube)
-      @pool.stats_tube(tube)['current-jobs-ready'].times do
-        @pool.reserve.delete
+    def purge(tubes)
+      tubes.each do |tube|
+        @pool.watch(tube)
+        @pool.stats_tube(tube)['current-jobs-ready'].times do
+          @pool.reserve.delete
+        end
+        @pool.ignore(tube)
       end
     end
   end

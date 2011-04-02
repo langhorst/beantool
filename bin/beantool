@@ -112,7 +112,7 @@ OptionParser.new do |opts|
           "    '--export', as a means of backup.") { |tube| options[:move_to] = tube }
 
   opts.on("-P", "--purge [TUBE]",
-          "Purge jobs from tube") { |tube| options[:purge] = tube }
+          "Purge jobs from tube") { |tube| options[:purge] = tube.split(',') }
 
 end.parse!
 
