@@ -6,7 +6,7 @@ require 'beantool/monitoring'
 
 class Beantool
   NAME = 'beantool'
-  VERSION = '0.3.1'
+  VERSION = '0.3.2'
 
   include Beantool::Administering
   include Beantool::Monitoring
@@ -14,6 +14,8 @@ class Beantool
   def self.version 
     [NAME, VERSION].join(' ') 
   end
+
+  attr_reader :pool
 
   def initialize(addrs)
     addrs << "0.0.0.0:11300" if addrs.empty?
