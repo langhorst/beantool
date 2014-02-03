@@ -1,7 +1,7 @@
-require 'test/unit'
+require 'minitest/autorun'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
 
-class BeantoolTest < Test::Unit::TestCase
+class BeantoolTest < MiniTest::Test
   def setup
     @beantool = Beantool.new(['localhost:11300'])
   end
