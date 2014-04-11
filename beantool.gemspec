@@ -1,4 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + '/lib/beantool')
+require File.expand_path('lib/beantool', File.dirname(__FILE__))
 
 Gem::Specification.new do |gem|
   gem.name        = 'beantool'
