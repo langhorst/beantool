@@ -1,13 +1,8 @@
 require 'pp'
 
 module Beantool; module Monitoring
-  def list_tubes
-    a = [] 
-    pool.list_tubes.each do |host, tubes|
-      a << host
-      tubes.each { |tube| a << "\t" + tube }
-    end
-    return a.join("\n")
+  def tubes
+    pool.tubes.all.map{|t| t.name}.join("\n")
   end
 
   def stats
