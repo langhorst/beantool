@@ -116,7 +116,7 @@ OptionParser.new do |opts|
 
 end.parse!
 
-beantool = Beantool.new(options[:hosts])
+beantool = Beantool::Base.new(options[:hosts])
 
 # Handle monitoring options
 
