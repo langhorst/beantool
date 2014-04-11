@@ -6,7 +6,7 @@ require File.expand_path(File.join('..', 'lib', 'beantool'), File.dirname(__FILE
 
 options = Hash.new
 beanfile = File.join(ENV['HOME'], '.beantool')
-options[:hosts] = File.exist?(beanfile) ? IO.readlines(beanfile).map{ |l| l.chomp } : Array.new
+options[:hosts] = File.exist?(beanfile) ? IO.readlines(beanfile).map{ |l| l.chomp } : 'localhost:11300'
 
 OptionParser.new do |opts|
   opts.banner = "Usage: beantool [options]"
@@ -120,7 +120,7 @@ beantool = Beantool::Base.new(options[:hosts])
 
 # Handle monitoring options
 
-puts beantool.list_tubes if options[:list]
+puts beantool.tubes if options[:list]
 
 if options[:stats]
   if options[:stats].empty?
