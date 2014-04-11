@@ -37,7 +37,7 @@ module Beantool; module Monitoring
       a << host
       build_stats(stats).each { |s| a << "\t" + s }
     end
-    return a.join("\n")
+    a.join("\n")
   rescue => e
     return e.message
   end
@@ -49,25 +49,25 @@ module Beantool; module Monitoring
   def inspect_job(id)
     job = pool.peek_job(id).first
     unless job.nil?
-      return build_inspect(job.last).join("\n")
+      build_inspect(job.last).join("\n")
     else
-      return "job id #{id} not found\n"
+      "job id #{id} not found\n"
     end
   end
 
   def peek_ready(tube)
     pool.use(tube)
-    return build_peek(pool.peek_ready).join("\n")
+    build_peek(pool.peek_ready).join("\n")
   end
 
   def peek_buried(tube)
     pool.use(tube)
-    return build_peek(pool.peek_buried).join("\n")
+    build_peek(pool.peek_buried).join("\n")
   end
 
   def peek_delayed(tube)
     pool.use(tube)
-    return build_peek(pool.peek_delayed).join("\n")
+    build_peek(pool.peek_delayed).join("\n")
   end
 
   private
@@ -76,7 +76,7 @@ module Beantool; module Monitoring
     a = []
     a << "name: #{stats.delete('name')}" if stats['name']
     stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
-    return a
+    a
   end
 
   def build_inspect(job)
@@ -85,7 +85,7 @@ module Beantool; module Monitoring
     a << "id: #{job.id}"
     a << "body: #{job.body.inspect}\n"
     a << PP.pp(job.stats, '')
-    return a
+    a
   end
 
   def build_peek(job)
@@ -94,6 +94,6 @@ module Beantool; module Monitoring
       a << PP.pp(job, '')
       a << PP.pp(job.body, '')
     end
-    return a
+    a
   end
 end; end
