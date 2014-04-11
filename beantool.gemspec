@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version      = '~> 2.0'
 
-  gem.add_runtime_dependency     'beanstalk-client' 
+  gem.add_runtime_dependency     'beaneater'
 
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rake'
