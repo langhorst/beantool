@@ -1,10 +1,9 @@
-$:.unshift(File.dirname(__FILE__))
 require 'rubygems'
-require 'beanstalk-client'
-require 'beantool/administering'
-require 'beantool/monitoring'
+require 'beaneater'
+require File.expand_path(File.join('beantool', 'administering'), File.dirname(__FILE__))
+require File.expand_path(File.join('beantool', 'monitoring'), File.dirname(__FILE__))
 
-class Beantool
+module Beantool; class Base
   NAME = 'beantool'
   VERSION = '0.3.2'
 
@@ -17,13 +16,12 @@ class Beantool
 
   attr_reader :pool
 
-  def initialize(addrs)
-    addrs << "0.0.0.0:11300" if addrs.empty?
-    @pool = Beanstalk::Pool.new(addrs) 
+  def initialize(addrs='0.0.0.0:11300')
+    @pool = Beaneater::Pool.new(Array(addrs))
     #@pool.ignore('default')
-  rescue Beanstalk::NotConnected
+  rescue Beaneater::NotConnected
     puts "FATAL: Unable to connect to beanstalkd"
     exit
   end
-end
+end; end
 

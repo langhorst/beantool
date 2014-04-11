@@ -3,7 +3,7 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
 
 class BeantoolTest < MiniTest::Test
   def setup
-    @beantool = Beantool.new(['localhost:11300'])
+    @beantool = Beantool::Base.new(['localhost:11300'])
   end
 
   def teardown
