@@ -145,11 +145,11 @@ if options[:raw_stats]
   end
 end
 
-print beantool.inspect_job(options[:inspect_job]) if options[:inspect_job]
+puts beantool.inspect_job(options[:inspect_job]) if options[:inspect_job]
 
-print beantool.peek_ready(options[:peek_ready]) if options[:peek_ready]
-print beantool.peek_buried(options[:peek_buried]) if options[:peek_buried]
-print beantool.peek_delayed(options[:peek_delayed]) if options[:peek_delayed]
+puts beantool.peek(options[:peek_ready], :ready) if options[:peek_ready]
+puts beantool.peek(options[:peek_buried], :buried) if options[:peek_buried]
+puts beantool.peek(options[:peek_delayed], :delayed) if options[:peek_delayed]
 
 # Handle adminstering options
 
