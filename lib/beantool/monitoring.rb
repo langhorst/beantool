@@ -9,32 +9,11 @@ module Beantool; module Monitoring
     build_stats(pool.stats).join("\n")
   end
 
-  def raw_stats 
-    a = []
-    raw_stats = pool.raw_stats
-    raw_stats.each do |host, stats|
-      a << host
-      build_stats(stats).each { |s| a << "\t" + s } 
-    end
-    return a.join("\n")
-  end
-
-  def tube_stats(tube)
-    return build_stats(pool.stats_tube(tube)).join("\n")
-  rescue => e
-    return e.message
-  end
-
-  def raw_tube_stats(tube)
-    a = []
-    raw_stats = pool.raw_stats_tube(tube)
-    raw_stats.each do |host, stats|
-      a << host
-      build_stats(stats).each { |s| a << "\t" + s }
-    end
-    a.join("\n")
-  rescue => e
-    return e.message
+  def tube_stats(name)
+    tube = pool.tubes.find(name)
+    tube.stats.keys.map{|stat| "#{stat}: #{tube.stats.send(stat)}"}.join("\n")
+  rescue Beaneater::NotFoundError
+    "#{name.inspect} not found"
   end
 
   def kick(num)
@@ -42,53 +21,16 @@ module Beantool; module Monitoring
   end
 
   def inspect_job(id)
-    job = pool.peek_job(id).first
-    unless job.nil?
-      build_inspect(job.last).join("\n")
-    else
-      "job id #{id} not found\n"
-    end
+    job = pool.jobs.peek(id)
+    return "job id #{id} not found" if job.nil?
+    job.stats.keys.map{|stat| "#{stat}: #{job.stats.send(stat)}"}.concat(["body: #{job.body.inspect}"]).join("\n")
   end
 
-  def peek_ready(tube)
-    pool.use(tube)
-    build_peek(pool.peek_ready).join("\n")
-  end
-
-  def peek_buried(tube)
-    pool.use(tube)
-    build_peek(pool.peek_buried).join("\n")
-  end
-
-  def peek_delayed(tube)
-    pool.use(tube)
-    build_peek(pool.peek_delayed).join("\n")
-  end
-
-  private
-
-  def build_stats(stats)
-    a = []
-    a << "name: #{stats.delete('name')}" if stats['name']
-    stats.keys.sort.each { |k| a << "#{k}: #{stats[k]}" }
-    a
-  end
-
-  def build_inspect(job)
-    a = []
-    a << PP.pp(job, '')
-    a << "id: #{job.id}"
-    a << "body: #{job.body.inspect}\n"
-    a << PP.pp(job.stats, '')
-    a
-  end
-
-  def build_peek(job)
-    a = []
-    unless job.nil?
-      a << PP.pp(job, '')
-      a << PP.pp(job.body, '')
-    end
-    a
+  def peek(name, state)
+    job = pool.tubes.find(name).peek(state.to_sym)
+    return "job not found" if job.nil?
+    ["id: #{job.id}", "body: #{job.body.inspect}"].join("\n")
+  rescue Beaneater::NotFoundError
+    "#{name.inspect} not found"
   end
 end; end
