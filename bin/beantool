@@ -1,18 +1,20 @@
 #!/usr/bin/env ruby
 
-require 'pp'
+require 'ostruct'
 require 'optparse'
 require File.expand_path(File.join('..', 'lib', 'beantool'), File.dirname(__FILE__))
 
-options = Hash.new
+options = OpenStruct.new
 beanfile = File.join(ENV['HOME'], '.beantool')
-options[:hosts] = File.exist?(beanfile) ? IO.readlines(beanfile).map{ |l| l.chomp } : []
+options.hosts = File.exist?(beanfile) ? IO.readlines(beanfile).map{ |l| l.chomp } : []
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: beantool [options]"
+  opts.program_name = Beantool::NAME
+  opts.banner = "Usage: #{opts.program_name} [options]"
 
   opts.separator("")
-  opts.separator("General Options")
+  opts.separator("General Options:")
+  opts.separator("")
 
   opts.on("-a", "--address [ADDRESS]",
           "Beanstalkd address",
@@ -22,8 +24,78 @@ OptionParser.new do |opts|
           "    '.beantool' file in your home",
           "    directory, each line representing",
           "    a Beanstalkd address.") do |host|
-    options[:hosts] << host
+    options.hosts << host
   end
+
+  opts.separator("")
+  opts.separator("Monitoring Options:")
+  opts.separator("")
+
+  opts.on("-l", "--list", "List all tubes") { options.list = true }
+
+  opts.on("-s", "--stats [TUBE]",
+          "Display stats for entire instance",
+          "    Optionally provide a comma separated",
+          "    list of tubes for tube stats.") do |tubes|
+    tubes = tubes.to_s.split(',')
+    options.stats = tubes
+  end
+
+  opts.on("-i", "--inspect-job [ID]",
+          "Inspect job") { |id| options.inspect_job = id }
+
+  opts.on("-p", "--peek-ready [TUBE]",
+          "Peek a ready job") { |tube| options.peek_ready = tube }
+
+  opts.on("-b", "--peek-buried [TUBE]",
+          "Peek a buried job") { |tube| options.peek_buried = tube }
+
+  opts.on("-d", "--peek-delayed [TUBE]",
+          "Peek a delayed job") { |tube| options.peek_delayed = tube }
+
+  opts.separator("")
+  opts.separator("Administering Options:")
+  opts.separator("")
+
+  opts.on("-k", "--kick [NUM]",
+          "Kick each tube NUM times") { |num| options.kick = num.to_i }
+
+  opts.on("-c", "--create [JOB]",
+          "Create a job",
+          "    Use in conjunction with '--move-to',",
+          "    to create a job on a specific tube.",
+          "    The 'default' tube will be used if a",
+          "    '-t' argument is not provided.") { |job| options.create = job }
+
+ opts.on("-m", "--move-from [TUBE]",
+          "Move jobs from tube",
+          "    Use in conjunction with '-t',",
+          "    '--move-to'") { |tube| options.move_from = tube }
+
+  opts.on("-t", "--move-to [TUBE]",
+          "Move jobs to tube",
+          "    Use in conjunction with '-m',",
+          "    '--move-from'. You can also specify",
+          "    this argument in conjunction with '-e',",
+          "    '--export', as a means of backup.") { |tube| options.move_to = tube }
+
+  opts.on("-P", "--purge [TUBE]",
+          "Purge jobs from tube") { |tube| options.purge = tube.split(',') }
+
+  opts.on("-I", "--import [TUBE]",
+          "Import tube from '--filename',",
+          "    A default filename of '[tube].yaml'",
+          "    is used if an '-f' argument is not",
+          "    provided.") { |tube| options.import = tube }
+
+  opts.on("-E", "--export [TUBE]",
+          "Export tube to '--filename'",
+          "    A default filename of '[tube].yaml'",
+          "    is used if an '-f' argument is not",
+          "    provided.") { |tube| options.export = tube }
+
+  opts.on("-f", "--filename [FILENAME]", 
+          "Filename for import/export") { |file| options.filename = file }
 
   opts.on_tail.separator("")
 
@@ -36,144 +108,69 @@ OptionParser.new do |opts|
     puts Beantool.version
     exit
   end
-  
-  opts.separator("")
-  opts.separator("Monitoring Options")
-
-  opts.on("-l", "--list", "List all tubes") { options[:list] = true }
-
-  opts.on("-s", "--stats [TUBE]",
-          "Display stats for entire instance",
-          "    Optionally provide a comma separated",
-          "    list of tubes for tube stats.") do |tubes|
-    tubes = tubes.to_s.split(',')
-    options[:stats] = tubes
-  end
-
-  opts.on("-r", "--raw-stats [TUBE]",
-          "Display raw stats for entire instance",
-          "    Optionally provide a comma separated",
-          "    list of tubes for raw tube stats.") do |tubes|
-    tubes = tubes.to_s.split(',')
-    options[:raw_stats] = tubes
-  end
-
-  opts.on("-i", "--inspect-job [ID]",
-          "Inspect job") { |id| options[:inspect_job] = id }
-
-  opts.on("-p", "--peek-ready [TUBE]",
-          "Peek a ready job") { |tube| options[:peek_ready] = tube }
-
-  opts.on("-b", "--peek-buried [TUBE]",
-          "Peek a buried job") { |tube| options[:peek_buried] = tube }
-
-  opts.on("-d", "--peek-delayed [TUBE]",
-          "Peek a delayed job") { |tube| options[:peek_delayed] = tube }
-
-  opts.separator("")
-  opts.separator("Administering Options")
-
-  opts.on("-k", "--kick [NUM]",
-          "Kick each connection") { |num| options[:kick] = num.to_i }
-
-  opts.on("-E", "--export [TUBE]",
-          "Export tube to '--filename'",
-          "    A default filename of '[tube].yaml'",
-          "    is used if an '-f' argument is not",
-          "    provided.") { |tube| options[:export] = tube }
-
-  opts.on("-I", "--import [TUBE]",
-          "Import tube from '--filename',",
-          "    A default filename of '[tube].yaml'",
-          "    is used if an '-f' argument is not",
-          "    provided.") { |tube| options[:import] = tube }
-
-  opts.on("-f", "--filename [FILENAME]", 
-          "Filename for import/export") { |file| options[:filename] = file }
-
-  opts.on("-c", "--create [JOB]",
-          "Create a job",
-          "    Use in conjunction with '--move-to',",
-          "    to create a job on a specific tube.",
-          "    The 'default' tube will be used if a",
-          "    '-t' argument is not provided.") { |job| options[:create] = job }
-
-  opts.on("-m", "--move-from [TUBE]",
-          "Move jobs from tube",
-          "    Use in conjunction with '-t',",
-          "    '--move-to'") { |tube| options[:move_from] = tube }
-
-  opts.on("-t", "--move-to [TUBE]",
-          "Move jobs to tube",
-          "    Use in conjunction with '-m',",
-          "    '--move-from'. You can also specify",
-          "    this argument in conjunction with '-e',",
-          "    '--export', as a means of backup.") { |tube| options[:move_to] = tube }
-
-  opts.on("-P", "--purge [TUBE]",
-          "Purge jobs from tube") { |tube| options[:purge] = tube.split(',') }
-
+ 
 end.parse!
 
-options[:hosts] << 'localhost:11300' if options[:hosts].empty?
+options.hosts << 'localhost:11300' if options.hosts.empty?
 
-beantool = Beantool::Base.new(options[:hosts])
+beantool = nil
+
+begin
+  beantool = Beantool.new(options.hosts)
+rescue Beaneater::NotConnected
+  puts "unable to connect to beanstalkd at #{options.hosts.inspect}"
+  exit
+end
 
 # Handle monitoring options
 
-puts beantool.tubes if options[:list]
+puts beantool.tubes if options.list
 
-if options[:stats]
-  if options[:stats].empty?
+if options.stats
+  if options.stats.empty?
     puts beantool.stats
   else
-    options[:stats].each_with_index do |tube,index|
+    options.stats.each_with_index do |tube,index|
       puts beantool.tube_stats(tube)
-      puts "\n" unless index == options[:stats].size-1
+      puts "\n" unless index == options.stats.size-1
     end
   end
 end
 
-if options[:raw_stats]
-  if options[:raw_stats].empty?
-    puts beantool.raw_stats
-  else
-    options[:raw_stats].each_with_index do |tube,index|
-      puts beantool.raw_tube_stats(tube)
-      puts "\n" unless index == options[:raw_stats].size-1
-    end
-  end
-end
+puts beantool.inspect_job(options.inspect_job) if options.inspect_job
 
-puts beantool.inspect_job(options[:inspect_job]) if options[:inspect_job]
-
-puts beantool.peek(options[:peek_ready], :ready) if options[:peek_ready]
-puts beantool.peek(options[:peek_buried], :buried) if options[:peek_buried]
-puts beantool.peek(options[:peek_delayed], :delayed) if options[:peek_delayed]
+puts beantool.peek(options.peek_ready, :ready) if options.peek_ready
+puts beantool.peek(options.peek_buried, :buried) if options.peek_buried
+puts beantool.peek(options.peek_delayed, :delayed) if options.peek_delayed
 
 # Handle adminstering options
 
-if options[:kick]
-  beantool.kick(options[:kick] || 1)
+if options.kick
+  beantool.kick(options.kick || 1)
 end
 
-if options[:export]
-  beantool.export(options[:export], options[:filename] || options[:export]+'.yaml', options[:move_to])
+if options.export
+  beantool.move(options.export, options.move_to) if options.move_to
+  beantool.export(options.export, options.filename || options.export+'.yaml')
 end
 
-if options[:import]
-  beantool.import(options[:import], options[:filename] || options[:import]+'.yaml')
+if options.import
+  begin
+    options.filename ||= options.import+'.yaml'
+    beantool.import(options.import, options.filename)
+  rescue Errno::ENOENT
+    puts "#{options.filename} does not exist"
+  end
 end
 
-if options[:move_from] && options[:move_to]
-  beantool.move(options[:move_from], options[:move_to])
+if options.move_from && options.move_to
+  beantool.move(options.move_from, options.move_to)
 end
 
-if options[:purge]
-  beantool.purge(options[:purge])
+if options.purge
+  beantool.purge(options.purge)
 end
 
-if options[:create]
-  beantool.create(options[:create], options[:move_to] || 'default')
+if options.create
+  beantool.create(options.create, options.move_to || 'default')
 end
-
