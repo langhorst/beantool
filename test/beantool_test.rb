@@ -1,9 +1,9 @@
 require 'minitest/autorun'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'beantool')
+require File.expand_path(File.join('..', 'lib', 'beantool'), File.dirname(__FILE__))
 
 class BeantoolTest < MiniTest::Test
   def setup
-    @beantool = Beantool::Base.new(['localhost:11300'])
+    @beantool = Beantool.new(['localhost:11300'])
   end
 
   def teardown
