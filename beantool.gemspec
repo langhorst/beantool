@@ -2,15 +2,15 @@ require File.expand_path('lib/beantool', File.dirname(__FILE__))
 
 Gem::Specification.new do |gem|
   gem.name        = 'beantool'
-  gem.description = %q{}
-  gem.summary     = %q{}
+  gem.description = %q{Beantool is a command line utility for monitoring and adminstering a Beanstalkd pool.}
+  gem.summary     = %q{CLI tool for Beanstalkd}
 
   gem.version     = Beantool::VERSION
   gem.platform    = Gem::Platform::RUBY
 
   gem.authors     = ['Justin Langhorst']
   gem.email       = ['the@justinlanghorst.com']
-  gem.homepage    = ''
+  gem.homepage    = 'http://rubygems.org/gems/beantool'
   gem.license     = 'MIT'
 
   gem.files                      = Dir.glob('{bin,lib,test}/**/*') + %w(LICENSE.md README.md)
