@@ -20,13 +20,12 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version      = '~> 2.0'
 
-  gem.add_runtime_dependency     'beaneater'
+  gem.add_runtime_dependency     'beaneater', '~> 0.3'
 
-  gem.add_development_dependency 'bundler'
-  gem.add_development_dependency 'rake'
-  gem.add_development_dependency 'minitest'
-  gem.add_development_dependency 'minitest-reporters'
-  gem.add_development_dependency 'rdoc'
-  gem.add_development_dependency 'simplecov'
-  gem.add_development_dependency 'pry'
+  gem.add_development_dependency 'bundler', '~> 1.5'
+  gem.add_development_dependency 'rake', '~> 10.0'
+  gem.add_development_dependency 'minitest', '~> 5.0'
+  gem.add_development_dependency 'rdoc', '~> 4.0'
+  gem.add_development_dependency 'simplecov', '~> 0.8'
+  gem.add_development_dependency 'pry', '~> 0.9'
 end
